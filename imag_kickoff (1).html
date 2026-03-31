@@ -1,0 +1,882 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>IMAG · Kickoff Quiz</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Lora:ital,wght@0,400;0,600;0,700;1,400&family=Source+Sans+3:wght@300;400;600;700&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
+<style>
+:root {
+  --bg:    #f5f4f0;
+  --bg2:   #ffffff;
+  --bg3:   #edecea;
+  --border:  rgba(0,0,0,.10);
+  --border2: rgba(0,0,0,.18);
+  --text:  #1a1a1a;
+  --muted: #666;
+  --muted2:#999;
+
+  --brand:     #0d6b8a;
+  --brand-dim: rgba(13,107,138,.08);
+  --brand-b:   rgba(13,107,138,.28);
+
+  --A:     #1a7a4a;
+  --B:     #1a52a8;
+  --C:     #8a3a1a;
+  --A-dim: rgba(26,122,74,.09);
+  --B-dim: rgba(26,82,168,.09);
+  --C-dim: rgba(138,58,26,.09);
+  --A-b:   rgba(26,122,74,.28);
+  --B-b:   rgba(26,82,168,.28);
+  --C-b:   rgba(138,58,26,.28);
+
+  --ben:   #1a7a4a;
+  --mal:   #b83232;
+  --ben-dim: rgba(26,122,74,.09);
+  --mal-dim: rgba(184,50,50,.09);
+  --ben-b:   rgba(26,122,74,.28);
+  --mal-b:   rgba(184,50,50,.28);
+
+  --fd:'Lora',serif;
+  --fb:'Source Sans 3',sans-serif;
+  --r:12px; --rs:7px;
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+body{font-family:var(--fb);background:var(--bg);color:var(--text);min-height:100vh;-webkit-font-smoothing:antialiased;}
+.page{display:none;min-height:100vh;flex-direction:column;}
+.page.active{display:flex;}
+
+/* TOPBAR */
+.topbar{display:flex;align-items:center;justify-content:space-between;padding:12px 24px;border-bottom:1px solid var(--border);background:var(--bg2);position:sticky;top:0;z-index:200;flex-shrink:0;}
+.logo{font-family:var(--fd);font-weight:700;font-size:18px;color:var(--text);}
+.logo span{color:var(--brand);}
+.tr{display:flex;align-items:center;gap:8px;}
+.pill{font-family:var(--fb);font-size:10px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;padding:4px 11px;border-radius:20px;border:1px solid var(--border2);color:var(--muted);background:var(--bg3);}
+.pill.active{background:var(--brand-dim);border-color:var(--brand-b);color:var(--brand);}
+.pill.live{background:var(--ben-dim);border-color:var(--ben-b);color:var(--ben);}
+.pill.live::before{content:'● ';animation:blink 1.4s infinite;}
+@keyframes blink{0%,100%{opacity:1}50%{opacity:.2}}
+
+/* BUTTONS */
+.btn{font-family:var(--fb);font-weight:700;font-size:12px;letter-spacing:.3px;padding:8px 16px;border-radius:var(--rs);border:1px solid transparent;cursor:pointer;transition:all .15s;display:inline-flex;align-items:center;gap:6px;white-space:nowrap;}
+.btn:hover:not(:disabled){filter:brightness(.92);transform:translateY(-1px);}
+.btn:disabled{opacity:.4;cursor:not-allowed;transform:none!important;}
+.btn-brand{background:var(--brand);color:#fff;border-color:var(--brand);}
+.btn-ghost{background:var(--bg2);color:var(--text);border-color:var(--border2);}
+.btn-ghost:hover:not(:disabled){background:var(--bg3);}
+.btn-lg{padding:12px 26px;font-size:14px;border-radius:var(--r);}
+.btn-sm{padding:5px 11px;font-size:11px;}
+
+/* LANDING */
+#landing{align-items:center;justify-content:center;background:var(--bg);}
+.li{text-align:center;padding:52px 24px 60px;max-width:540px;}
+.li-kick{font-family:var(--fb);font-size:10px;font-weight:700;letter-spacing:3px;color:var(--muted2);text-transform:uppercase;margin-bottom:20px;display:flex;align-items:center;justify-content:center;gap:10px;}
+.li-kick::before,.li-kick::after{content:'';height:1px;width:28px;background:var(--border2);}
+.li-h1{font-family:var(--fd);font-size:clamp(40px,7vw,68px);font-weight:700;line-height:1.05;margin-bottom:8px;color:var(--text);}
+.li-h1 em{font-style:italic;color:var(--brand);}
+.li-sub{font-family:var(--fd);font-style:italic;font-size:15px;color:var(--muted);margin-bottom:40px;}
+.li-cards{display:flex;gap:14px;justify-content:center;flex-wrap:wrap;margin-bottom:32px;}
+.ec{width:200px;background:var(--bg2);border:1px solid var(--border);border-radius:var(--r);padding:26px 20px 22px;cursor:pointer;transition:all .18s;text-align:center;}
+.ec:hover{box-shadow:0 4px 20px rgba(0,0,0,.10);transform:translateY(-4px);border-color:var(--brand-b);}
+.ec-ico{font-size:30px;margin-bottom:12px;display:block;}
+.ec-role{font-family:var(--fb);font-size:10px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--brand);margin-bottom:4px;}
+.ec-name{font-family:var(--fd);font-size:21px;font-weight:700;margin-bottom:5px;}
+.ec-desc{font-size:12px;color:var(--muted);line-height:1.5;}
+
+/* QR Panel */
+.qr-panel{display:flex;flex-direction:column;align-items:center;gap:10px;}
+.qr-panel-label{font-family:var(--fb);font-size:10px;font-weight:700;letter-spacing:2px;color:var(--muted2);text-transform:uppercase;display:flex;align-items:center;gap:10px;}
+.qr-panel-label::before,.qr-panel-label::after{content:'';height:1px;width:24px;background:var(--border2);}
+.qr-box{background:white;border-radius:10px;padding:10px;display:inline-block;border:1px solid var(--border);}
+.qr-url{font-family:var(--fb);font-size:11px;color:var(--brand);text-align:center;}
+
+/* PRESENTER */
+#presenter{flex-direction:column;}
+.pl{display:grid;grid-template-columns:300px 1fr;flex:1;overflow:hidden;height:calc(100vh - 53px);}
+
+/* Sidebar */
+.sidebar{background:var(--bg2);border-right:1px solid var(--border);display:flex;flex-direction:column;overflow:hidden;}
+.sb-top{padding:14px 12px;border-bottom:1px solid var(--border);}
+.sb-lbl{font-family:var(--fb);font-size:9px;font-weight:700;letter-spacing:2.5px;text-transform:uppercase;color:var(--muted2);margin-bottom:8px;}
+.phase-btns{display:flex;flex-direction:column;gap:3px;}
+.pb{display:flex;align-items:center;gap:9px;padding:8px 10px;border-radius:var(--rs);cursor:pointer;transition:all .14s;border:1px solid transparent;background:transparent;color:var(--muted);font-family:var(--fb);font-size:13px;text-align:left;width:100%;}
+.pb:hover{background:var(--bg3);color:var(--text);}
+.pb.active.brand{background:var(--brand-dim);border-color:var(--brand-b);color:var(--brand);}
+.pb.active.ben{background:var(--ben-dim);border-color:var(--ben-b);color:var(--ben);}
+.pb-ico{font-size:16px;flex-shrink:0;}
+.pb-lbl{font-family:var(--fd);font-weight:600;font-size:12px;}
+.pb-sub{font-size:10px;opacity:.65;margin-top:1px;}
+.pb-divider{height:1px;background:var(--border);margin:5px 0;}
+
+/* Question list in sidebar */
+.q-scroll{flex:1;overflow-y:auto;padding:10px;}
+.q-item{display:flex;align-items:flex-start;gap:8px;padding:7px 8px;border-radius:var(--rs);cursor:pointer;border:1px solid transparent;transition:all .14s;margin-bottom:3px;}
+.q-item:hover{background:var(--bg3);}
+.q-item.active{background:var(--brand-dim);border-color:var(--brand-b);}
+.q-item.answered{border-color:var(--ben-b);}
+.q-num{font-family:var(--fd);font-weight:700;font-size:11px;color:var(--brand);min-width:20px;flex-shrink:0;margin-top:1px;}
+.q-item.active .q-num{color:var(--brand);}
+.q-text{font-size:11px;color:var(--muted);line-height:1.4;}
+.q-item.active .q-text{color:var(--text);}
+.q-check{margin-left:auto;font-size:12px;flex-shrink:0;}
+
+/* Sidebar QR */
+.sb-qr{padding:12px;border-top:1px solid var(--border);}
+.sb-qr-lbl{font-family:var(--fb);font-size:9px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--muted2);margin-bottom:8px;}
+.sb-qr-inner{display:flex;gap:10px;align-items:center;}
+.sb-qr-box{background:white;border-radius:7px;padding:6px;flex-shrink:0;border:1px solid var(--border);}
+.sb-qr-info{font-size:11px;color:var(--muted);line-height:1.6;}
+.sb-qr-info strong{color:var(--brand);font-weight:600;display:block;margin-bottom:1px;}
+
+/* Main panel */
+.md{overflow-y:auto;padding:28px 32px;display:flex;flex-direction:column;gap:20px;}
+
+/* Question display card */
+.q-card{background:var(--bg2);border:1px solid var(--border);border-radius:var(--r);overflow:hidden;}
+.q-card-head{padding:14px 20px;background:var(--brand);display:flex;align-items:center;justify-content:space-between;}
+.q-card-num{font-family:var(--fb);font-size:11px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:rgba(255,255,255,.7);}
+.q-card-nav{display:flex;gap:6px;}
+.q-card-nav button{background:rgba(255,255,255,.15);border:1px solid rgba(255,255,255,.25);color:white;padding:4px 10px;border-radius:5px;font-size:12px;cursor:pointer;font-family:var(--fb);font-weight:600;transition:background .14s;}
+.q-card-nav button:hover{background:rgba(255,255,255,.28);}
+.q-card-nav button:disabled{opacity:.3;cursor:not-allowed;}
+.q-card-body{padding:24px 24px 20px;}
+.q-card-text{font-family:var(--fd);font-size:19px;font-weight:600;line-height:1.45;color:var(--text);margin-bottom:20px;}
+.q-card-opts{display:flex;flex-direction:column;gap:8px;}
+.q-card-opt{display:flex;align-items:flex-start;gap:10px;padding:11px 14px;border-radius:var(--rs);border:1.5px solid var(--border);background:var(--bg3);cursor:default;}
+.q-card-opt.A{border-color:var(--A-b);background:var(--A-dim);}
+.q-card-opt.B{border-color:var(--B-b);background:var(--B-dim);}
+.q-card-opt.C{border-color:var(--C-b);background:var(--C-dim);}
+.q-opt-letter{font-family:var(--fd);font-weight:700;font-size:13px;min-width:20px;flex-shrink:0;}
+.q-card-opt.A .q-opt-letter{color:var(--A);}
+.q-card-opt.B .q-opt-letter{color:var(--B);}
+.q-card-opt.C .q-opt-letter{color:var(--C);}
+.q-opt-text{font-size:14px;line-height:1.4;color:var(--text);}
+.q-correct-badge{margin-left:auto;font-size:11px;font-weight:700;font-family:var(--fb);color:var(--ben);background:var(--ben-dim);border:1px solid var(--ben-b);padding:2px 8px;border-radius:20px;flex-shrink:0;}
+
+/* Stats row */
+.sec-t{font-family:var(--fb);font-size:9px;font-weight:700;letter-spacing:2.5px;text-transform:uppercase;color:var(--muted2);margin-bottom:10px;display:flex;align-items:center;gap:8px;}
+.sec-t::after{content:'';flex:1;height:1px;background:var(--border);}
+.sg{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px;}
+.sc{background:var(--bg2);border:1px solid var(--border);border-radius:var(--r);padding:16px 18px;position:relative;overflow:hidden;}
+.sc::before{content:'';position:absolute;top:0;left:0;right:0;height:3px;}
+.sc.brand::before{background:var(--brand);}
+.sc.ben::before{background:var(--ben);}
+.sc-lbl{font-family:var(--fb);font-size:9px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--muted);margin-bottom:6px;}
+.sc-val{font-family:var(--fd);font-size:34px;font-weight:700;line-height:1;margin-bottom:2px;}
+.sc.brand .sc-val{color:var(--brand);}
+.sc.ben .sc-val{color:var(--ben);}
+.sc-sub{font-size:11px;color:var(--muted);}
+
+/* Per-question accuracy */
+.qa-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(110px,1fr));gap:8px;}
+.qa-card{background:var(--bg2);border:1px solid var(--border);border-radius:var(--rs);padding:10px 12px;}
+.qa-top{display:flex;align-items:center;justify-content:space-between;margin-bottom:6px;}
+.qa-lbl{font-family:var(--fb);font-size:9px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:var(--muted2);}
+.qa-ans{font-size:9px;font-family:var(--fb);font-weight:700;padding:2px 6px;border-radius:20px;}
+.qa-ans.A{background:var(--A-dim);color:var(--A);border:1px solid var(--A-b);}
+.qa-ans.B{background:var(--B-dim);color:var(--B);border:1px solid var(--B-b);}
+.qa-ans.C{background:var(--C-dim);color:var(--C);border:1px solid var(--C-b);}
+.qa-ans._{background:var(--bg3);color:var(--muted2);border:1px solid var(--border);}
+.qa-track{height:4px;background:var(--bg3);border-radius:3px;overflow:hidden;margin-bottom:4px;}
+.qa-fill{height:100%;border-radius:3px;transition:width .6s cubic-bezier(.4,0,.2,1);}
+.qa-pct{font-family:var(--fd);font-size:16px;font-weight:700;}
+.qa-n{font-size:10px;color:var(--muted);}
+
+/* Dist */
+.dist-card{background:var(--bg2);border:1px solid var(--border);border-radius:var(--r);padding:16px 20px;}
+.dist-card-t{font-family:var(--fb);font-size:9px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--muted2);margin-bottom:12px;}
+.drow{display:flex;align-items:center;gap:12px;margin-bottom:8px;}
+.drow:last-child{margin-bottom:0;}
+.drow-lbl{font-family:var(--fb);font-size:12px;font-weight:600;min-width:80px;}
+.drow-track{flex:1;height:7px;background:var(--bg3);border-radius:4px;overflow:hidden;}
+.drow-fill{height:100%;border-radius:4px;transition:width .5s ease;}
+.drow-pct{font-family:var(--fd);font-size:13px;font-weight:700;min-width:36px;text-align:right;}
+
+/* VOTER */
+#voter{background:var(--bg);}
+.vb{flex:1;max-width:520px;width:100%;margin:0 auto;padding:20px 18px 56px;display:flex;flex-direction:column;gap:12px;}
+
+.ns{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:40px 0;animation:fu .4s ease;}
+.ns-art{font-family:var(--fd);font-size:60px;font-weight:700;line-height:1;color:var(--brand);margin-bottom:4px;text-align:center;font-style:italic;}
+.ns-sub{font-family:var(--fd);font-style:italic;font-size:15px;color:var(--muted);margin-bottom:36px;text-align:center;}
+.nf{width:100%;max-width:320px;background:var(--bg2);border:2px solid var(--border2);color:var(--text);padding:12px 16px;border-radius:var(--r);font-family:var(--fd);font-size:18px;font-weight:600;text-align:center;outline:none;transition:border-color .16s;margin-bottom:10px;}
+.nf:focus{border-color:var(--brand);}
+.nf::placeholder{color:var(--muted2);font-weight:400;font-style:italic;}
+
+.ws{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:40px 0;animation:fu .4s ease;}
+.wr{width:48px;height:48px;border:3px solid var(--border2);border-top-color:var(--brand);border-radius:50%;animation:spin 1s linear infinite;margin-bottom:22px;}
+@keyframes spin{to{transform:rotate(360deg)}}
+.wh{font-family:var(--fd);font-size:22px;font-weight:700;color:var(--muted);margin-bottom:5px;}
+.wp{font-size:13px;color:var(--muted2);}
+
+.vbh{text-align:center;padding:4px 0;animation:fu .4s ease;}
+.vbh-ico{font-size:28px;margin-bottom:6px;}
+.vbh-t{font-family:var(--fd);font-size:22px;font-weight:700;margin-bottom:3px;color:var(--brand);}
+.vbh-s{font-size:13px;color:var(--muted);}
+
+/* Voter question cards */
+.cvr{background:var(--bg2);border:1px solid var(--border);border-radius:var(--r);overflow:hidden;animation:fu .3s ease both;}
+.cvr-head{display:flex;align-items:center;justify-content:space-between;padding:8px 14px;border-bottom:1px solid var(--border);background:var(--bg3);}
+.cvr-num{font-family:var(--fb);font-size:10px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:var(--muted);}
+.cvr-badge{font-family:var(--fb);font-size:9px;font-weight:700;letter-spacing:1px;text-transform:uppercase;padding:2px 8px;border-radius:20px;}
+.cvr-badge.voted{background:var(--ben-dim);color:var(--ben);border:1px solid var(--ben-b);}
+.cvr-badge.pend{background:var(--bg3);color:var(--muted2);border:1px solid var(--border);}
+.cvr-q{padding:10px 14px 8px;font-family:var(--fd);font-size:13px;font-weight:600;line-height:1.45;color:var(--text);}
+.cvr-btns{display:flex;flex-direction:column;gap:5px;padding:0 12px 10px;}
+.vo{width:100%;padding:8px 12px;border-radius:var(--rs);border:1.5px solid var(--border);background:var(--bg3);color:var(--muted);font-family:var(--fb);font-size:12px;font-weight:600;cursor:pointer;transition:all .13s;text-align:left;display:flex;align-items:center;gap:8px;}
+.vo:hover:not(:disabled){background:var(--bg2);border-color:var(--border2);color:var(--text);}
+.vo:disabled{cursor:default;}
+.vo-letter{font-family:var(--fd);font-weight:700;font-size:12px;min-width:16px;}
+.vo.sA{background:var(--A-dim);border-color:var(--A-b);color:var(--A);}
+.vo.sB{background:var(--B-dim);border-color:var(--B-b);color:var(--B);}
+.vo.sC{background:var(--C-dim);border-color:var(--C-b);color:var(--C);}
+.vo.sA .vo-letter{color:var(--A);}
+.vo.sB .vo-letter{color:var(--B);}
+.vo.sC .vo-letter{color:var(--C);}
+
+/* Score cards */
+.score-wrap{animation:fu .5s ease;}
+.scard{background:var(--bg2);border:1px solid var(--border);border-radius:var(--r);overflow:hidden;margin-bottom:10px;}
+.scard-head{padding:13px 16px;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid var(--border);background:var(--bg3);}
+.scard-title{font-family:var(--fd);font-size:13px;font-weight:700;color:var(--brand);}
+.scard-frac{font-family:var(--fd);font-size:24px;font-weight:700;}
+.spct{font-family:var(--fb);font-size:12px;font-weight:700;padding:3px 10px;border-radius:20px;}
+.spct.hi{background:var(--ben-dim);color:var(--ben);border:1px solid var(--ben-b);}
+.spct.mi{background:rgba(180,130,0,.08);color:#7a5800;border:1px solid rgba(180,130,0,.25);}
+.spct.lo{background:var(--mal-dim);color:var(--mal);border:1px solid var(--mal-b);}
+.scard-body{padding:10px 16px;display:flex;flex-direction:column;gap:5px;}
+.sr{display:flex;align-items:center;gap:8px;font-size:12px;padding:3px 0;border-bottom:1px solid var(--border);}
+.sr:last-child{border-bottom:none;}
+.sr-num{color:var(--muted2);font-family:var(--fb);font-size:10px;min-width:52px;}
+.sr-choice{font-family:var(--fb);font-size:10px;font-weight:700;padding:2px 8px;border-radius:20px;}
+.sr-choice.A{background:var(--A-dim);color:var(--A);border:1px solid var(--A-b);}
+.sr-choice.B{background:var(--B-dim);color:var(--B);border:1px solid var(--B-b);}
+.sr-choice.C{background:var(--C-dim);color:var(--C);border:1px solid var(--C-b);}
+.sr-choice.none{background:var(--bg3);color:var(--muted2);border:1px solid var(--border);}
+.sr-ico{font-size:14px;margin-left:auto;}
+.sr-hint{font-size:10px;color:var(--muted);}
+
+/* Connection dot */
+.conn-dot{width:7px;height:7px;border-radius:50%;background:var(--muted2);display:inline-block;transition:background .3s;}
+.conn-dot.ok{background:var(--ben);}
+.conn-dot.err{background:var(--mal);}
+
+.md-empty{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:60px;color:var(--muted2);}
+.md-empty-ico{font-size:48px;margin-bottom:16px;opacity:.35;}
+.md-empty-t{font-family:var(--fd);font-size:18px;font-weight:600;color:var(--muted);margin-bottom:6px;}
+
+.toast{position:fixed;bottom:16px;right:16px;background:var(--text);color:var(--bg2);padding:9px 16px;border-radius:var(--rs);font-family:var(--fb);font-size:12px;font-weight:600;z-index:10000;animation:fu .3s ease;box-shadow:0 4px 20px rgba(0,0,0,.2);}
+@keyframes fu{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}
+::-webkit-scrollbar{width:5px;}
+::-webkit-scrollbar-track{background:transparent;}
+::-webkit-scrollbar-thumb{background:var(--border2);border-radius:3px;}
+@media(max-width:700px){.pl{grid-template-columns:1fr}.sidebar{display:none}}
+</style>
+</head>
+<body>
+
+<!-- ═══════════════ LANDING ═══════════════ -->
+<div id="landing" class="page active">
+  <nav class="topbar">
+    <div class="logo">IMAG<span>·</span>Kickoff</div>
+    <div class="tr"><div class="pill">Quiz Interno · 2025</div></div>
+  </nav>
+  <div class="li">
+    <div class="li-kick">Time IMAG · Kickoff 2025</div>
+    <h1 class="li-h1">Você conhece<br><em>a IMAG?</em></h1>
+    <p class="li-sub">15 perguntas sobre o nosso dia a dia</p>
+    <div class="li-cards">
+      <div class="ec" onclick="goPres()">
+        <span class="ec-ico">🖥️</span>
+        <div class="ec-role">Painel</div>
+        <div class="ec-name">Apresentador</div>
+        <p class="ec-desc">Projete as questões, controle o quiz e veja os resultados ao vivo.</p>
+      </div>
+      <div class="ec" onclick="goVoter()">
+        <span class="ec-ico">📱</span>
+        <div class="ec-role">Participante</div>
+        <div class="ec-name">Colaborador</div>
+        <p class="ec-desc">Responda as 15 perguntas e veja seu score ao final.</p>
+      </div>
+    </div>
+    <div class="qr-panel">
+      <div class="qr-panel-label">Acesso rápido para participantes</div>
+      <div class="qr-box" id="qrLanding"></div>
+      <div class="qr-url">pedroandradegama.github.io/imag-kickoff/?r=v</div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════ PRESENTER ═══════════════ -->
+<div id="presenter" class="page">
+  <nav class="topbar">
+    <div class="logo">IMAG<span>·</span>Kickoff</div>
+    <div class="tr">
+      <span class="conn-dot" id="connDot"></span>
+      <div class="pill" id="presPill">Configuração</div>
+      <button class="btn btn-ghost btn-sm" onclick="goLanding()">← Início</button>
+    </div>
+  </nav>
+  <div class="pl">
+    <div class="sidebar">
+      <!-- Controls -->
+      <div class="sb-top">
+        <div class="sb-lbl">Controle da sessão</div>
+        <div class="phase-btns">
+          <button class="pb" id="pbIdle" onclick="setPhase('idle')">
+            <span class="pb-ico">⚙️</span>
+            <div><div class="pb-lbl">Aguardando</div><div class="pb-sub">Participantes entram, sem votação</div></div>
+          </button>
+          <div class="pb-divider"></div>
+          <button class="pb" id="pbVoting" onclick="setPhase('voting')">
+            <span class="pb-ico">▶️</span>
+            <div><div class="pb-lbl">Iniciar votação</div><div class="pb-sub">Libera as 15 questões para todos</div></div>
+          </button>
+          <button class="pb" id="pbResult" onclick="setPhase('result')">
+            <span class="pb-ico">📋</span>
+            <div><div class="pb-lbl">Liberar resultados</div><div class="pb-sub">Cada um vê seu score individual</div></div>
+          </button>
+          <div class="pb-divider"></div>
+          <button class="pb" id="pbFinal" onclick="setPhase('final')">
+            <span class="pb-ico">🏆</span>
+            <div><div class="pb-lbl">Resultado final</div><div class="pb-sub">Estatísticas gerais no telão</div></div>
+          </button>
+        </div>
+        <div style="display:flex;gap:6px;margin-top:10px;">
+          <button class="btn btn-ghost btn-sm" style="flex:1;justify-content:center;" onclick="resetVotes()">🔄 Resetar votos</button>
+          <button class="btn btn-ghost btn-sm" style="flex:1;justify-content:center;" onclick="resetAll()">💣 Reset total</button>
+        </div>
+      </div>
+      <!-- Question list -->
+      <div class="q-scroll" id="qList"></div>
+      <!-- QR -->
+      <div class="sb-qr">
+        <div class="sb-qr-lbl">QR · Participantes</div>
+        <div class="sb-qr-inner">
+          <div class="sb-qr-box" id="qrSidebar"></div>
+          <div class="sb-qr-info"><strong>Escaneie para participar</strong>Câmera do celular → tela do colaborador.</div>
+        </div>
+      </div>
+    </div>
+    <!-- Dashboard -->
+    <div class="md" id="mainDash">
+      <div class="md-empty"><div class="md-empty-ico">📊</div><div class="md-empty-t">Selecione uma questão ao lado</div></div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════ VOTER ═══════════════ -->
+<div id="voter" class="page">
+  <nav class="topbar">
+    <div class="logo">IMAG<span>·</span>Kickoff</div>
+    <div class="tr">
+      <span class="conn-dot" id="voterConnDot"></span>
+      <div class="pill" id="voterPill">Participante</div>
+    </div>
+  </nav>
+  <div class="vb" id="voterBody"></div>
+</div>
+
+<script>
+// ═══════════════════════════════════════════
+//  FIREBASE
+// ═══════════════════════════════════════════
+firebase.initializeApp({
+  apiKey: "AIzaSyDummyKeyNotNeededForRTDB",
+  databaseURL: "https://imag-quiz-default-rtdb.firebaseio.com"
+});
+const db       = firebase.database();
+const phaseRef = db.ref('kphase');
+const votesRef = db.ref('kvotes');
+
+// ═══════════════════════════════════════════
+//  QUESTIONS DATA
+// ═══════════════════════════════════════════
+const QUESTIONS = [
+  {
+    q: "Qual a idade mínima para realização de exames com contraste, pelo nosso protocolo interno?",
+    opts: ["16 anos", "18 anos", "20 anos"],
+    ans: "B"
+  },
+  {
+    q: "Qual o valor do Ultrassom Transvaginal?",
+    opts: ["R$ 155,00", "R$ 165,00", "R$ 160,00"],
+    ans: "C"
+  },
+  {
+    q: "Qual foi a meta do NPS no ano de 2025?",
+    opts: ["83", "84", "85"],
+    ans: "B"
+  },
+  {
+    q: "Quantos médicos compõem o quadro assistencial da IMAG (2 unidades), incluindo os que realizam consultas?",
+    opts: ["Entre 15–20", "Entre 21–26", "Entre 30–35"],
+    ans: "C"
+  },
+  {
+    q: "Qual o código de autorização de Ultrassom de Mama pelo Sassepe?",
+    opts: ["40901121", "40901033", "40901232"],
+    ans: "B"
+  },
+  {
+    q: "Qual o dia do aniversário de Dr. Ronaldo?",
+    opts: ["17/02", "16/01", "17/03"],
+    ans: "A"
+  },
+  {
+    q: "Qual o exame mais adequado para diagnosticar Osteoporose?",
+    opts: ["Tomografia de Tórax", "Raio-X de Bacia", "Densitometria Óssea"],
+    ans: "C"
+  },
+  {
+    q: "Quantos pacientes já atendemos desde a nossa abertura?",
+    opts: ["65.000", "45.000", "85.000"],
+    ans: "A"
+  },
+  {
+    q: "O que não pode faltar na IMAG, de jeito nenhum?",
+    opts: ["Água", "Café", "Bolacha"],
+    ans: "B"
+  },
+  {
+    q: "Qual o período ideal do ciclo menstrual para a realização da Histerossalpingografia?",
+    opts: ["4º – 8º dia", "8º – 12º dia", "12º – 16º dia"],
+    ans: "B"
+  },
+  {
+    q: "Atendimento Particular: qual o valor mínimo para parcelamento em 5x?",
+    opts: ["R$ 2.000,00", "R$ 1.800,00", "R$ 1.600,00"],
+    ans: "A"
+  },
+  {
+    q: "O que levou mais tempo para consertar/ajeitar/resolver?",
+    opts: ["A porta de correr da recepção", "O banheiro 2", "A TV do térreo"],
+    ans: "A"
+  },
+  {
+    q: "Qual a meta de agendamentos para Abril?",
+    opts: ["4.555", "4.940", "5.200"],
+    ans: "A"
+  },
+  {
+    q: "Qual o vídeo mais curtido no Instagram da IMAG, no ano de 2025?",
+    opts: ["Chegada de Dra. Luciana", "Visualizador de veias", "Finalidade do Holter"],
+    ans: "B"
+  },
+  {
+    q: "Qual é o valor inegociável?",
+    opts: ["Pontualidade", "Performance", "Integridade"],
+    ans: "C"
+  }
+];
+
+const N = QUESTIONS.length; // 15
+const LETTERS = ['A','B','C'];
+const VOTER_URL = 'https://pedroandradegama.github.io/imag-kickoff/?r=v';
+
+// ═══════════════════════════════════════════
+//  STATE
+// ═══════════════════════════════════════════
+let vName     = null;
+let vPhase    = null;
+let vMyVotes  = Array(N).fill(null);
+let vListeners= [];
+let presSelectedQ = 0;
+
+// ═══════════════════════════════════════════
+//  NAV
+// ═══════════════════════════════════════════
+function showPage(id){ document.querySelectorAll('.page').forEach(p=>p.classList.remove('active')); document.getElementById(id).classList.add('active'); }
+function goLanding(){ detachAll(); showPage('landing'); }
+
+function goPres(){
+  showPage('presenter');
+  buildQList();
+  renderQCard(0);
+  phaseRef.on('value', snap => {
+    const ph = snap.val()||'idle';
+    syncPhaseUI(ph);
+    votesRef.once('value', vs => renderDash(ph, vs.val()||{}));
+  });
+  votesRef.on('value', snap => {
+    phaseRef.once('value', ps => renderDash(ps.val()||'idle', snap.val()||{}));
+  });
+}
+
+function goVoter(){ showPage('voter'); renderNameScreen(); }
+
+function detachAll(){
+  phaseRef.off(); votesRef.off();
+  vListeners.forEach(fn=>fn()); vListeners=[];
+}
+
+// ═══════════════════════════════════════════
+//  CONNECTION
+// ═══════════════════════════════════════════
+db.ref('.info/connected').on('value', snap => {
+  const ok = snap.val()===true;
+  document.querySelectorAll('.conn-dot').forEach(d=>{ d.classList.toggle('ok',ok); d.classList.toggle('err',!ok); });
+});
+
+// ═══════════════════════════════════════════
+//  PHASE
+// ═══════════════════════════════════════════
+const PM = {
+  idle:   { lbl:'Aguardando',         cls:'',      pbId:'pbIdle',   ac:'' },
+  voting: { lbl:'▶ Votação aberta',   cls:'active',pbId:'pbVoting', ac:'brand' },
+  result: { lbl:'📋 Resultados',      cls:'active',pbId:'pbResult', ac:'brand' },
+  final:  { lbl:'🏆 Resultado Final', cls:'live',  pbId:'pbFinal',  ac:'ben' },
+};
+
+function setPhase(ph){ phaseRef.set(ph); }
+
+function syncPhaseUI(ph){
+  const m = PM[ph]||PM.idle;
+  const pill = document.getElementById('presPill');
+  if(pill){ pill.className='pill '+(m.cls||''); pill.textContent=m.lbl; pill.dataset.phase=ph; }
+  document.querySelectorAll('.pb').forEach(b=>b.classList.remove('active','brand','ben'));
+  const ab=document.getElementById(m.pbId);
+  if(ab){ ab.classList.add('active'); if(m.ac) ab.classList.add(m.ac); }
+}
+
+// ═══════════════════════════════════════════
+//  PRESENTER: Question list + card
+// ═══════════════════════════════════════════
+function buildQList(){
+  const list = document.getElementById('qList');
+  if(!list) return;
+  list.innerHTML = '';
+  QUESTIONS.forEach((q,i)=>{
+    const div = document.createElement('div');
+    div.className = 'q-item' + (i===presSelectedQ?' active':'');
+    div.id = 'qitem_'+i;
+    div.onclick = () => { presSelectedQ=i; selectQItem(i); renderQCard(i); };
+    div.innerHTML = `<div class="q-num">${i+1}</div>
+      <div class="q-text">${esc(q.q.length>60?q.q.slice(0,60)+'…':q.q)}</div>
+      <div class="q-check" id="qcheck_${i}"></div>`;
+    list.appendChild(div);
+  });
+}
+
+function selectQItem(idx){
+  document.querySelectorAll('.q-item').forEach((el,i)=>el.classList.toggle('active',i===idx));
+}
+
+function renderQCard(idx){
+  presSelectedQ = idx;
+  const dash = document.getElementById('mainDash');
+  if(!dash) return;
+
+  // get current votes snapshot for stats
+  votesRef.once('value', snap => {
+    const votesData = snap.val()||{};
+    phaseRef.once('value', pSnap => {
+      const ph = pSnap.val()||'idle';
+      renderDashWithQ(ph, votesData, idx);
+    });
+  });
+}
+
+function renderDash(ph, votesData){
+  renderDashWithQ(ph, votesData, presSelectedQ);
+}
+
+function renderDashWithQ(ph, votesData, qIdx){
+  const dash = document.getElementById('mainDash');
+  if(!dash) return;
+
+  const q    = QUESTIONS[qIdx];
+  const parts= Object.keys(votesData), nP=parts.length;
+
+  // votes for this question
+  const getVote = (name,i) => {
+    const arr=votesData[name];
+    if(!arr) return null;
+    const v=arr[i];
+    return (v===undefined||v===null||v==='null')?null:v;
+  };
+
+  // tally for this question
+  const tally = {A:0,B:0,C:0,total:0};
+  parts.forEach(nm=>{ const v=getVote(nm,qIdx); if(v){tally[v]++;tally.total++;} });
+
+  // correct answer
+  const correct = q.ans;
+  const pctCorrect = tally.total>0 ? Math.round(tally[correct]/tally.total*100):null;
+
+  // overall stats
+  const avgAll = () => {
+    if(!nP) return null;
+    let sum=0;
+    parts.forEach(nm=>{
+      let ok=0,tot=0;
+      for(let i=0;i<N;i++){
+        const a=QUESTIONS[i].ans, v=getVote(nm,i);
+        if(v!==null){tot++;if(v===a)ok++;}
+      }
+      sum+=(tot?ok/tot:0);
+    });
+    return Math.round(sum/nP*100);
+  };
+
+  // per-question accuracy (for final view)
+  const qAcc = Array.from({length:N},(_,i)=>{
+    const ans=QUESTIONS[i].ans;
+    let ok=0,tot=0;
+    parts.forEach(nm=>{ const v=getVote(nm,i); if(v!==null){tot++;if(v===ans)ok++;} });
+    return {pct:tot?Math.round(ok/tot*100):null, n:tot, ans};
+  });
+
+  const showFinal = ph==='final';
+
+  let html = '';
+
+  // ── Current question card ──
+  const revealAnswers = ['result','final'].includes(ph);
+
+  html += `<div class="q-card">
+    <div class="q-card-head">
+      <div class="q-card-num">Questão ${qIdx+1} de ${N}</div>
+      <div class="q-card-nav">
+        <button onclick="renderQCard(${qIdx-1})" ${qIdx===0?'disabled':''}>← Ant.</button>
+        <button onclick="renderQCard(${qIdx+1})" ${qIdx===N-1?'disabled':''}>Próx. →</button>
+      </div>
+    </div>
+    <div class="q-card-body">
+      <div class="q-card-text">${esc(q.q)}</div>
+      <div class="q-card-opts">
+        ${LETTERS.map((l,i)=>`
+        <div class="q-card-opt ${l}">
+          <span class="q-opt-letter">${l}</span>
+          <span class="q-opt-text">${esc(q.opts[i])}</span>
+          ${revealAnswers && l===correct ? '<span class="q-correct-badge">✓ Correta</span>' : ''}
+          ${tally.total>0 ? `<span style="margin-left:auto;font-family:var(--fd);font-size:13px;font-weight:700;color:var(--muted);flex-shrink:0;">${tally[l]} voto${tally[l]!==1?'s':''}</span>` : ''}
+        </div>`).join('')}
+      </div>
+    </div>
+  </div>`;
+
+  // ── Stats for this question ──
+  if(tally.total > 0){
+    html += `<div><div class="sec-t">Respostas · Questão ${qIdx+1}</div><div class="sg">
+      <div class="sc brand"><div class="sc-lbl">Votos recebidos</div><div class="sc-val">${tally.total}</div><div class="sc-sub">de ${nP} participante${nP!==1?'s':''}</div></div>
+      ${pctCorrect!==null?`<div class="sc ben"><div class="sc-lbl">Acerto nesta questão</div><div class="sc-val">${pctCorrect}%</div><div class="sc-sub">${tally[correct]} acertou${tally[correct]!==1?'am':''}</div></div>`:''}
+    </div></div>`;
+
+    // distribution bar for this question
+    html += `<div class="dist-card"><div class="dist-card-t">Distribuição das respostas</div>
+      ${LETTERS.map((l,i)=>{
+        const cnt=tally[l], pct=tally.total?Math.round(cnt/tally.total*100):0;
+        const col=`var(--${l})`;
+        return `<div class="drow">
+          <div class="drow-lbl" style="color:${col}">Opção ${l} — ${esc(q.opts[i].length>22?q.opts[i].slice(0,22)+'…':q.opts[i])}</div>
+          <div class="drow-track"><div class="drow-fill" style="width:${pct}%;background:${col}"></div></div>
+          <div class="drow-pct" style="color:${col}">${pct}%</div>
+        </div>`;
+      }).join('')}
+    </div>`;
+  }
+
+  // ── Final view: all-questions accuracy ──
+  if(showFinal && nP>0){
+    const avg=avgAll();
+    html += `<div><div class="sec-t">Visão geral · todas as questões</div><div class="sg">
+      <div class="sc brand"><div class="sc-lbl">Participantes</div><div class="sc-val">${nP}</div><div class="sc-sub">responderam</div></div>
+      ${avg!==null?`<div class="sc ben"><div class="sc-lbl">Acerto médio geral</div><div class="sc-val">${avg}%</div><div class="sc-sub">média do grupo</div></div>`:''}
+    </div></div>`;
+
+    html += `<div><div class="sec-t">Acerto por questão</div><div class="qa-grid">`;
+    qAcc.forEach((c,i)=>{
+      const col=c.pct===null?'var(--muted2)':c.pct>=70?'var(--ben)':c.pct>=50?'#7a5800':'var(--mal)';
+      html += `<div class="qa-card">
+        <div class="qa-top">
+          <div class="qa-lbl">Q${i+1}</div>
+          <div class="qa-ans ${c.ans||'_'}">Op. ${c.ans||'?'}</div>
+        </div>
+        <div class="qa-track"><div class="qa-fill" style="width:${c.pct||0}%;background:${col}"></div></div>
+        <div class="qa-pct" style="color:${col}">${c.pct!==null?c.pct+'%':'—'}</div>
+        <div class="qa-n">${c.n} voto${c.n!==1?'s':''}</div>
+      </div>`;
+    });
+    html += `</div></div>`;
+  }
+
+  dash.innerHTML = html;
+
+  // keep question list in sync
+  selectQItem(qIdx);
+}
+
+function resetVotes(){ if(!confirm('Resetar todos os votos?')) return; votesRef.set(null).then(()=>toast('Votos resetados.')); }
+function resetAll(){
+  if(!confirm('Reset TOTAL: apagar votos e fase?')) return;
+  Promise.all([votesRef.set(null), phaseRef.set('idle')]).then(()=>toast('Reset total feito.'));
+}
+
+// ═══════════════════════════════════════════
+//  VOTER
+// ═══════════════════════════════════════════
+function renderNameScreen(){
+  document.getElementById('voterBody').innerHTML = `<div class="ns">
+    <div class="ns-art">IMAG</div>
+    <div class="ns-sub">Identifique-se para participar</div>
+    <input class="nf" id="nf" placeholder="Seu nome…" maxlength="32"
+      onkeydown="if(event.key==='Enter') joinVoter()">
+    <button class="btn btn-brand btn-lg" style="width:100%;max-width:320px;justify-content:center;" onclick="joinVoter()">
+      Entrar →
+    </button>
+  </div>`;
+  setTimeout(()=>document.getElementById('nf')?.focus(),100);
+}
+
+function joinVoter(){
+  const inp = document.getElementById('nf');
+  const name = (inp?.value||'').trim();
+  if(!name){ inp?.focus(); return; }
+  vName = name;
+  vMyVotes = Array(N).fill(null);
+  votesRef.child(safeName(vName)).set(null).then(()=>attachVoterListeners());
+}
+
+function safeName(n){ return n.replace(/[.#$\[\]/]/g,'_'); }
+
+function attachVoterListeners(){
+  const phFn = phaseRef.on('value', snap=>{
+    const ph=snap.val()||'idle';
+    if(ph!==vPhase){ vPhase=ph; renderVoterForPhase(ph); }
+  });
+  votesRef.child(safeName(vName)).on('value', snap=>{
+    const val=snap.val();
+    if(val) vMyVotes=Array.from({length:N},(_,i)=>{ const v=val[i]; return (v===undefined||v===null||v==='null')?null:v; });
+  });
+  vListeners.push(()=>{ phaseRef.off('value',phFn); votesRef.child(safeName(vName)).off(); });
+}
+
+function renderVoterForPhase(ph){
+  const pill = document.getElementById('voterPill');
+
+  if(ph==='idle'){
+    if(pill){pill.className='pill';pill.textContent='Aguardando';}
+    document.getElementById('voterBody').innerHTML=`<div class="ws">
+      <div class="wr"></div><div class="wh">Aguardando início</div>
+      <p class="wp">O apresentador abrirá a votação em breve.</p>
+      <p style="margin-top:14px;font-family:var(--fd);font-style:italic;font-size:13px;color:var(--brand);">${esc(vName)}</p>
+    </div>`; return;
+  }
+
+  if(ph==='result') { renderVScore(); return; }
+  if(ph==='final')  { renderVScore(); return; }
+
+  // ph === 'voting'
+  if(pill){pill.className='pill active';pill.textContent='Votação aberta';}
+
+  const answered = vMyVotes.filter(v=>v!==null).length;
+
+  let html = `<div class="vbh">
+    <div class="vbh-ico">🧠</div>
+    <div class="vbh-t">Você conhece a IMAG?</div>
+    <div class="vbh-s" id="vbhS">${answered}/${N} respondidas · ${esc(vName)}</div>
+  </div>`;
+
+  QUESTIONS.forEach((q,i)=>{
+    const vote=vMyVotes[i], voted=vote!==null;
+    html+=`<div class="cvr" id="cvr_${i}" style="animation-delay:${(i*.025).toFixed(2)}s">
+      <div class="cvr-head">
+        <div class="cvr-num">Questão ${i+1}</div>
+        <div class="cvr-badge ${voted?'voted':'pend'}">${voted?'✓ Respondida':'Pendente'}</div>
+      </div>
+      <div class="cvr-q">${esc(q.q)}</div>
+      <div class="cvr-btns">
+        ${LETTERS.map((l,j)=>`<button class="vo ${voted&&vote===l?'s'+l:''}" ${voted?'disabled':''}
+          onclick="castVote(${i},'${l}')">
+          <span class="vo-letter">${l}</span>${esc(q.opts[j])}
+        </button>`).join('')}
+      </div>
+    </div>`;
+  });
+
+  document.getElementById('voterBody').innerHTML = html;
+}
+
+function castVote(idx, val){
+  if(!vName||vMyVotes[idx]!==null) return;
+  vMyVotes[idx]=val;
+  votesRef.child(safeName(vName)).child(idx).set(val);
+  const row=document.getElementById('cvr_'+idx);
+  if(row){
+    row.querySelectorAll('.vo').forEach(b=>{ b.disabled=true; LETTERS.forEach(l=>b.classList.remove('s'+l)); });
+    row.querySelectorAll('.vo')[LETTERS.indexOf(val)]?.classList.add('s'+val);
+    const badge=row.querySelector('.cvr-badge');
+    if(badge){badge.className='cvr-badge voted';badge.textContent='✓ Respondida';}
+  }
+  const answered=vMyVotes.filter(v=>v!==null).length;
+  const sub=document.getElementById('vbhS');
+  if(sub) sub.textContent=`${answered}/${N} respondidas · ${vName}`;
+}
+
+function renderVScore(){
+  const pill=document.getElementById('voterPill');
+  if(pill){pill.className='pill live';pill.textContent='Seu resultado';}
+
+  let ok=0,tot=0; const rows=[];
+  for(let i=0;i<N;i++){
+    const a=QUESTIONS[i].ans, v=vMyVotes[i];
+    if(v!==null){tot++;if(v===a)ok++;}
+    rows.push({i,ans:a,vote:v,qText:QUESTIONS[i].q,optText:QUESTIONS[i].opts});
+  }
+  const pct=tot?Math.round(ok/tot*100):0;
+  const pc=pct>=70?'hi':pct>=50?'mi':'lo';
+
+  document.getElementById('voterBody').innerHTML=`<div class="score-wrap">
+    <div class="scard">
+      <div class="scard-head">
+        <div class="scard-title">🏆 Resultado · ${esc(vName)}</div>
+        <div style="display:flex;align-items:center;gap:8px;">
+          <div class="scard-frac">${ok}/${N}</div>
+          <div class="spct ${pc}">${pct}%</div>
+        </div>
+      </div>
+      <div class="scard-body">
+        ${rows.map(({i,ans,vote,optText})=>`<div class="sr">
+          <div class="sr-num">Questão ${i+1}</div>
+          <div class="sr-choice ${vote||'none'}">${vote?'Op. '+vote:'—'}</div>
+          <div class="sr-ico">${vote===null?'⬜':vote===ans?'✅':'❌'}</div>
+          ${vote!==null&&vote!==ans?`<div class="sr-hint">→ Op. ${ans}: ${esc(optText[LETTERS.indexOf(ans)])}</div>`:''}
+        </div>`).join('')}
+      </div>
+    </div>
+  </div>`;
+}
+
+// ═══════════════════════════════════════════
+//  UTILS
+// ═══════════════════════════════════════════
+function esc(s){ return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+let tT;
+function toast(msg){
+  const o=document.getElementById('_t');if(o)o.remove();
+  const el=document.createElement('div');el.id='_t';el.className='toast';el.textContent=msg;
+  document.body.appendChild(el);clearTimeout(tT);tT=setTimeout(()=>el.remove(),2600);
+}
+
+// ═══════════════════════════════════════════
+//  QR
+// ═══════════════════════════════════════════
+function makeQR(id,size){
+  const el=document.getElementById(id);if(!el||!window.QRCode)return;
+  el.innerHTML='';
+  new QRCode(el,{text:VOTER_URL,width:size,height:size,colorDark:'#1a1a1a',colorLight:'#ffffff',correctLevel:QRCode.CorrectLevel.M});
+}
+window.addEventListener('load',()=>setTimeout(()=>{makeQR('qrLanding',140);makeQR('qrSidebar',76);},200));
+
+// ═══════════════════════════════════════════
+//  INIT
+// ═══════════════════════════════════════════
+if(new URLSearchParams(window.location.search).get('r')==='v') goVoter();
+</script>
+</body>
+</html>
